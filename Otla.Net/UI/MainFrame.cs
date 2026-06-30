@@ -95,14 +95,29 @@ namespace Otla.Net.UI
 
         private void WavBtn_Click(object sender, EventArgs e)
         {
+            if (_currentBlocks.Count == 0)
+            {
+                MessageBox.Show("No blocks to convert.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             using (var sfd = new SaveFileDialog())
             {
                 sfd.Filter = "WAV Audio|*.wav";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     statusLabel.Text = "Generating WAV...";
-                    // Logic for WAV generation would be called here
-                    statusLabel.Text = $"WAV saved to {sfd.FileName}";
+                    try
+                    {
+                        var generator = new Otla.Net.Logic.Audio.WavGenerator(44100);
+                        generator.GenerateZxtapWav(sfd.FileName, _currentBlocks);
+                        statusLabel.Text = $"WAV saved to {sfd.FileName}";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error generating WAV: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        statusLabel.Text = "Error in generation";
+                    }
                 }
             }
         }
