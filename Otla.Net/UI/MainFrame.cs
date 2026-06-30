@@ -35,6 +35,7 @@ namespace Otla.Net.UI
             this.newMenuItem.Click += (s, e) => ClearData();
             this.quitMenuItem.Click += (s, e) => Application.Exit();
             this.wavBtn.Click += WavBtn_Click;
+            this.playBtn.Click += PlayBtn_Click;
         }
 
         private void ClearData()
@@ -95,30 +96,74 @@ namespace Otla.Net.UI
 
         private void WavBtn_Click(object sender, EventArgs e)
         {
+            DoConversion(null);
+        }
+
+        private void PlayBtn_Click(object sender, EventArgs e)
+        {
+            string tempWav = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "otla_play.wav");
+            if (DoConversion(tempWav))
+            {
+                statusLabel.Text = "Playing...";
+                try
+                {
+                    using (var player = new System.Media.SoundPlayer(tempWav))
+                    {
+                        player.PlaySync();
+                    }
+                    statusLabel.Text = "Playback finished";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Playback error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private bool DoConversion(string targetPath)
+        {
             if (_currentBlocks.Count == 0)
             {
                 MessageBox.Show("No blocks to convert.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return false;
             }
 
-            using (var sfd = new SaveFileDialog())
+            string outputPath = targetPath;
+            bool isTemp = false;
+
+            if (string.IsNullOrEmpty(outputPath))
             {
-                sfd.Filter = "WAV Audio|*.wav";
-                if (sfd.ShowDialog() == DialogResult.OK)
+                using (var sfd = new SaveFileDialog())
                 {
-                    statusLabel.Text = "Generating WAV...";
-                    try
-                    {
-                        var generator = new Otla.Net.Logic.Audio.WavGenerator(44100);
-                        generator.GenerateZxtapWav(sfd.FileName, _currentBlocks);
-                        statusLabel.Text = $"WAV saved to {sfd.FileName}";
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error generating WAV: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        statusLabel.Text = "Error in generation";
-                    }
+                    sfd.Filter = "WAV Audio|*.wav";
+                    if (sfd.ShowDialog() != DialogResult.OK) return false;
+                    outputPath = sfd.FileName;
                 }
+            }
+            else
+            {
+                isTemp = true;
+            }
+
+            statusLabel.Text = "Generating WAV...";
+            try
+            {
+                int freq = frecuenciaCmbBx.SelectedIndex == 1 ? 48000 : 44100;
+                WaveformType waveform = (WaveformType)formaCmbBx.SelectedIndex;
+
+                var generator = new Otla.Net.Logic.Audio.WavGenerator(freq, waveform);
+                generator.GenerateZxtapWav(outputPath, _currentBlocks);
+
+                if (!isTemp)
+                    statusLabel.Text = $"WAV saved to {outputPath}";
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error generating WAV: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                statusLabel.Text = "Error in generation";
+                return false;
             }
         }
     }
