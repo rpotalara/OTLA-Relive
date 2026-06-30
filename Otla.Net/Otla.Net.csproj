@@ -54,7 +54,6 @@
     <Compile Include="UI\MainFrame.cs" />
     <Compile Include="UI\MainFrame.Designer.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="LogicValidator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
