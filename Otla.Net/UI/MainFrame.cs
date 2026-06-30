@@ -65,9 +65,9 @@ namespace Otla.Net.UI
                         }
                         else if (ofd.FileName.EndsWith(".tap", StringComparison.OrdinalIgnoreCase))
                         {
-                            var (header, blocks) = ZxSpectrumFiles.LoadTap(ofd.FileName);
-                            _currentHeader = header;
-                            _currentBlocks.AddRange(blocks);
+                            var result = ZxSpectrumFiles.LoadTap(ofd.FileName);
+                            _currentHeader = result.Header;
+                            _currentBlocks.AddRange(result.Blocks);
                             UpdateListView();
                             statusLabel.Text = "ZX Tap loaded";
                         }

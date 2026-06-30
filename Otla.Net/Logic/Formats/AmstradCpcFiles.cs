@@ -9,7 +9,13 @@ namespace Otla.Net.Logic.Formats
 {
     public static class AmstradCpcFiles
     {
-        public static (SbbHeader, List<SbbBlock>) LoadAmsdos(string filename)
+        public class LoaderResult
+        {
+            public SbbHeader Header { get; set; }
+            public List<SbbBlock> Blocks { get; set; }
+        }
+
+        public static LoaderResult LoadAmsdos(string filename)
         {
             byte[] data = File.ReadAllBytes(filename);
             var header = new SbbHeader
@@ -56,7 +62,7 @@ namespace Otla.Net.Logic.Formats
             }
 
             header.NBlocks = (byte)blocks.Count;
-            return (header, blocks);
+            return new LoaderResult { Header = header, Blocks = blocks };
         }
     }
 }
