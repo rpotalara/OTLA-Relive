@@ -501,8 +501,10 @@ namespace Otla.Net.UI
             //
             // maquinaCmbBx
             //
+            this.maquinaCmbBx.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.maquinaCmbBx.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.maquinaCmbBx.FormattingEnabled = true;
+            this.maquinaCmbBx.ItemHeight = 40;
             this.maquinaCmbBx.Items.AddRange(new object[] {
             "ZX",
             "CPC",
@@ -510,7 +512,7 @@ namespace Otla.Net.UI
             "81"});
             this.maquinaCmbBx.Location = new System.Drawing.Point(32, 16);
             this.maquinaCmbBx.Name = "maquinaCmbBx";
-            this.maquinaCmbBx.Size = new System.Drawing.Size(153, 21);
+            this.maquinaCmbBx.Size = new System.Drawing.Size(153, 46);
             this.maquinaCmbBx.TabIndex = 6;
             //
             // modelLbl
@@ -660,11 +662,13 @@ namespace Otla.Net.UI
             //
             // formaCmbBx
             //
+            this.formaCmbBx.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.formaCmbBx.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.formaCmbBx.FormattingEnabled = true;
+            this.formaCmbBx.ItemHeight = 22;
             this.formaCmbBx.Location = new System.Drawing.Point(104, 67);
             this.formaCmbBx.Name = "formaCmbBx";
-            this.formaCmbBx.Size = new System.Drawing.Size(105, 21);
+            this.formaCmbBx.Size = new System.Drawing.Size(105, 28);
             this.formaCmbBx.TabIndex = 5;
             //
             // label3
