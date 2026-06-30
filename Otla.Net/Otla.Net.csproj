@@ -60,6 +60,16 @@
     <EmbeddedResource Include="UI\MainFrame.resx">
       <DependentUpon>MainFrame.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets\machine_zx.bmp" />
+    <EmbeddedResource Include="Assets\machine_cpc.bmp" />
+    <EmbeddedResource Include="Assets\machine_msx.bmp" />
+    <EmbeddedResource Include="Assets\machine_81.bmp" />
+    <EmbeddedResource Include="Assets\wave_Square.bmp" />
+    <EmbeddedResource Include="Assets\wave_Cubic.bmp" />
+    <EmbeddedResource Include="Assets\wave_SqrSin.bmp" />
+    <EmbeddedResource Include="Assets\wave_Shaw.bmp" />
+    <EmbeddedResource Include="Assets\wave_Ecte.bmp" />
+    <EmbeddedResource Include="Assets\wave_Delta.bmp" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

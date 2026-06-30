@@ -44,4 +44,12 @@ Esta opção foca em longevidade e facilidade de manutenção futura utilizando 
 
 ## 4. Conclusão de Viabilidade
 
-A conversão é **totalmente viável** e o código-fonte atual possui uma boa separação de responsabilidades. O maior impedimento atual (erro de 16 bits) é pontual e fácil de resolver substituindo os utilitários na pasta `tools`. A migração para C# com lógica em C++ trará ao projeto a modernidade necessária para rodar de forma estável no Windows 10/11.
+A conversão é **totalmente viável** e o código-fonte atual possui uma boa separação de responsabilidades. O maior impedimento atual (erro de 16 bits) foi resolvido através de um porte completo para C# (.NET Framework 4.6.2).
+
+### Progresso Atual (Porte C#):
+- **Core:** Implementação nativa de geradores de onda (Square, Cubic, etc.) e parsers de arquivos (MSX, ZX Spectrum, Amstrad).
+- **Interface:** Recriação fiel da interface original em Windows Forms, incluindo o suporte a "Owner-Drawing" para ComboBoxes com ícones de máquinas e formas de onda.
+- **Áudio:** Integração com `System.Media` para reprodução direta sem dependências de 16 bits.
+- **Visual Studio:** Projeto totalmente compatível com Visual Studio Professional, facilitando manutenções futuras.
+
+A migração para C# trouxe ao projeto a modernidade necessária para rodar de forma nativa e estável no Windows 10/11 x64, eliminando todas as dependências legadas problemáticas.

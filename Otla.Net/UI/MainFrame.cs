@@ -11,11 +11,54 @@ namespace Otla.Net.UI
     {
         private SbbHeader _currentHeader = new SbbHeader();
         private List<SbbBlock> _currentBlocks = new List<SbbBlock>();
+        private Image[] _machineImages;
+        private Image[] _waveImages;
 
         public MainFrame()
         {
             InitializeComponent();
+            LoadAssets();
             SetupInitialState();
+        }
+
+        private void LoadAssets()
+        {
+            try
+            {
+                _machineImages = new Image[]
+                {
+                    GetResourceImage("machine_zx.bmp"),
+                    GetResourceImage("machine_cpc.bmp"),
+                    GetResourceImage("machine_msx.bmp"),
+                    GetResourceImage("machine_81.bmp")
+                };
+
+                _waveImages = new Image[]
+                {
+                    GetResourceImage("wave_Square.bmp"),
+                    GetResourceImage("wave_Cubic.bmp"),
+                    GetResourceImage("wave_SqrSin.bmp"),
+                    GetResourceImage("wave_Shaw.bmp"),
+                    GetResourceImage("wave_Ecte.bmp"),
+                    GetResourceImage("wave_Delta.bmp")
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error loading assets: " + ex.Message);
+            }
+        }
+
+        private Image GetResourceImage(string name)
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            // In modern .csproj, resource names might include the path
+            string resourceName = $"Otla.Net.Assets.{name}";
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null) return null;
+                return Image.FromStream(stream);
+            }
         }
 
         private void SetupInitialState()
@@ -36,6 +79,43 @@ namespace Otla.Net.UI
             this.quitMenuItem.Click += (s, e) => Application.Exit();
             this.wavBtn.Click += WavBtn_Click;
             this.playBtn.Click += PlayBtn_Click;
+
+            this.maquinaCmbBx.DrawItem += MaquinaCmbBx_DrawItem;
+            this.formaCmbBx.DrawItem += FormaCmbBx_DrawItem;
+        }
+
+        private void MaquinaCmbBx_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            if (_machineImages != null && e.Index < _machineImages.Length && _machineImages[e.Index] != null)
+            {
+                e.Graphics.DrawImage(_machineImages[e.Index], e.Bounds.Left, e.Bounds.Top);
+            }
+            else
+            {
+                e.Graphics.DrawString(maquinaCmbBx.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds);
+            }
+            e.DrawFocusRectangle();
+        }
+
+        private void FormaCmbBx_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            int imgWidth = 0;
+            if (_waveImages != null && e.Index < _waveImages.Length && _waveImages[e.Index] != null)
+            {
+                e.Graphics.DrawImage(_waveImages[e.Index], e.Bounds.Left, e.Bounds.Top);
+                imgWidth = _waveImages[e.Index].Width + 5;
+            }
+
+            string text = formaCmbBx.Items[e.Index].ToString();
+            using (Brush brush = new SolidBrush(e.ForeColor))
+            {
+                e.Graphics.DrawString(text, e.Font, brush, e.Bounds.Left + imgWidth, e.Bounds.Top + (e.Bounds.Height - e.Font.Height) / 2);
+            }
+            e.DrawFocusRectangle();
         }
 
         private void ClearData()
