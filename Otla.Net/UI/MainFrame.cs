@@ -12,10 +12,10 @@ namespace Otla.Net.UI
 
         public MainFrame()
         {
-            InitializeComponent();
+            InitializeManualUI();
         }
 
-        private void InitializeComponent()
+        private void InitializeManualUI()
         {
             this.Text = "o.t.l.a. .NET Modernized";
             this.Size = new Size(400, 600);

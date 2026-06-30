@@ -11,10 +11,10 @@
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</Platform>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -52,6 +52,7 @@
     <Compile Include="Logic\Formats\ZxSpectrumFiles.cs" />
     <Compile Include="Models\SbbModels.cs" />
     <Compile Include="UI\MainFrame.cs" />
+    <Compile Include="UI\MainFrame.Designer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="LogicValidator.cs" />
   </ItemGroup>
