@@ -6,21 +6,32 @@ using Otla.Net.Models;
 
 namespace Otla.Net.Logic.Audio
 {
+    public enum WaveformType
+    {
+        Square,
+        Cubic,
+        SqrSin,
+        Shaw,
+        EqualE,
+        Delta
+    }
+
     public class WavGenerator
     {
         private int _sampleRate = 44100;
+        private WaveformType _waveform = WaveformType.Square;
 
-        // ZX Spectrum standard timings (approximated in samples at 44.1kHz)
-        // Based on original c_pilot_zx, c_sync_zx, etc.
+        // ZX Spectrum standard timings (approximated in samples)
         private byte[] _pilotCycle;
         private byte[] _sync1Cycle;
         private byte[] _sync2Cycle;
         private byte[] _zeroCycle;
         private byte[] _oneCycle;
 
-        public WavGenerator(int sampleRate)
+        public WavGenerator(int sampleRate, WaveformType waveform = WaveformType.Square)
         {
             _sampleRate = sampleRate;
+            _waveform = waveform;
             InitializeStandardZxWaveforms();
         }
 
@@ -29,20 +40,33 @@ namespace Otla.Net.Logic.Audio
             // 2168 T-states for pilot, 667/735 for sync, 855 for zero, 1710 for one.
             // At 44100Hz, 1ms is 44.1 samples.
             // 3.5MHz CPU -> 1 T-state is 1/3,500,000 sec.
-            // Pilot pulse (2168 T-states) = 2168 / 3,500,000 = 0.000619s = ~27 samples.
 
-            _pilotCycle = CreateSquareWaveCycle(27);
-            _sync1Cycle = CreateSquareWaveCycle(8);
-            _sync2Cycle = CreateSquareWaveCycle(9);
-            _zeroCycle = CreateSquareWaveCycle(11);
-            _oneCycle = CreateSquareWaveCycle(22);
+            double samplesPerTState = (double)_sampleRate / 3500000.0;
+
+            _pilotCycle = CreateCycle((int)Math.Round(2168 * samplesPerTState));
+            _sync1Cycle = CreateCycle((int)Math.Round(667 * samplesPerTState));
+            _sync2Cycle = CreateCycle((int)Math.Round(735 * samplesPerTState));
+            _zeroCycle = CreateCycle((int)Math.Round(855 * samplesPerTState));
+            _oneCycle = CreateCycle((int)Math.Round(1710 * samplesPerTState));
         }
 
-        private byte[] CreateSquareWaveCycle(int length)
+        private byte[] CreateCycle(int length)
         {
             byte[] cycle = new byte[length];
             for (int i = 0; i < length; i++)
-                cycle[i] = (i < length / 2) ? (byte)220 : (byte)35; // Standard amplitude
+            {
+                if (_waveform == WaveformType.Square)
+                {
+                    cycle[i] = (i < length / 2) ? (byte)220 : (byte)35;
+                }
+                else
+                {
+                    // Basic Sine approximation for others for now, or just Square fallback
+                    double angle = 2.0 * Math.PI * i / length;
+                    byte val = (byte)(128 + 90 * Math.Sin(angle));
+                    cycle[i] = val;
+                }
+            }
             return cycle;
         }
 
