@@ -28,7 +28,7 @@ namespace Otla.Net.Models
 
         public byte[] ToBytes()
         {
-            byte[] bytes = new byte[46]; // ts_sbb_header size
+            byte[] bytes = new byte[40]; // ts_sbb_header size (packed)
             // Version "SB" + code
             bytes[0] = (byte)'S';
             bytes[1] = (byte)'B';
