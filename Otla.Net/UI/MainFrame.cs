@@ -184,14 +184,15 @@ namespace Otla.Net.UI
             string tempWav = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "otla_play.wav");
             if (DoConversion(tempWav))
             {
-                statusLabel.Text = "Playing...";
+                statusLabel.Text = "Opening Player Monitor...";
                 try
                 {
-                    using (var player = new System.Media.SoundPlayer(tempWav))
+                    using (var monitor = new PlayerMonitor(tempWav))
                     {
-                        player.PlaySync();
+                        monitor.StartPlayback();
+                        monitor.ShowDialog(this);
                     }
-                    statusLabel.Text = "Playback finished";
+                    statusLabel.Text = "Ready";
                 }
                 catch (Exception ex)
                 {
