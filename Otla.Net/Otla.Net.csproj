@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logic\Persistence\SbbPersistence.cs" />
     <Compile Include="Logic\Audio\WavGenerator.cs" />
     <Compile Include="Logic\Formats\AmstradCpcFiles.cs" />
     <Compile Include="Logic\Formats\MsxRomConverter.cs" />

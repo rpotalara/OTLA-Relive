@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Globalization;
 using Otla.Net.Models;
 using Otla.Net.Logic.Formats;
+using Otla.Net.Logic.Persistence;
 
 namespace Otla.Net.UI
 {
@@ -77,8 +79,35 @@ namespace Otla.Net.UI
 
             // Event bindings
             this.addBtn.Click += AddBtn_Click;
+
+            // File Menu
             this.newMenuItem.Click += (s, e) => ClearData();
+            this.newAddMenuItem.Click += (s, e) => { ClearData(); AddBtn_Click(s, e); };
+            this.openMenuItem.Click += (s, e) => OpenSbb();
+            this.saveMenuItem.Click += (s, e) => SaveSbb(false);
+            this.saveAsMenuItem.Click += (s, e) => SaveSbb(true);
             this.quitMenuItem.Click += (s, e) => Application.Exit();
+
+            // Convert Menu
+            this.toSoundMenuItem.Click += PlayBtn_Click;
+            this.toWavMenuItem.Click += WavBtn_Click;
+            this.toMp3MenuItem.Click += (s, e) => MessageBox.Show("MP3 conversion requires external LAME encoder. Feature coming soon in .NET port.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.toTzxMenuItem.Click += (s, e) => MessageBox.Show("TZX conversion is not yet implemented in the .NET port.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // Tools Menu
+            this.editBlocksMenuItem.Click += (s, e) => MessageBox.Show("Block editing is available via the 'Add blocks' workflow. Full editor coming soon.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.batchSbbMenuItem.Click += (s, e) => MessageBox.Show("Batch .sbb processing not yet implemented.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.batchWavMenuItem.Click += (s, e) => MessageBox.Show("Batch .wav processing not yet implemented.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.adjustAudioMenuItem.Click += (s, e) => MessageBox.Show("Audio adjustment settings not yet implemented.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.wavPlayerMenuItem.Click += PlayBtn_Click;
+
+            // Settings Menu
+            this.settingsMenu.Click += (s, e) => MessageBox.Show("General settings not yet implemented.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // Help Menu
+            this.wikiMenuItem.Click += (s, e) => System.Diagnostics.Process.Start("https://code.google.com/archive/p/otla/");
+            this.aboutMenuItem.Click += (s, e) => MessageBox.Show("OTLA .NET Modernized v2.2\n\nPorted from Borland C++ Builder 6 project.\n\nAuthor: original by Hernán Moraldo, port by Jules.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             this.wavBtn.Click += WavBtn_Click;
             this.playBtn.Click += PlayBtn_Click;
 
@@ -286,11 +315,128 @@ namespace Otla.Net.UI
             _currentHeader = new SbbHeader();
             fileEdt.Text = "new.SBB";
             nameEdt.Text = "";
+            aditionalInfoEdt.Text = "";
             clearEdt.Text = "0";
             usrEdt.Text = "0";
             pokeEdt.Text = "0";
+            bloksEdt.Text = "0";
+            originEdt.Text = "";
+            reubicaEdt.Text = "255";
             blocksLV.Items.Clear();
             statusLabel.Text = "Ready";
+            maquinaCmbBx.Enabled = true;
+        }
+
+        private void FillData()
+        {
+            fileEdt.Text = _currentHeader.Name + ".SBB"; // Approximation or actual path
+            UpdateListView();
+
+            // Set machine and trigger its UI logic
+            int machineIdx = 0;
+            switch (_currentHeader.Machine.Trim().ToUpper())
+            {
+                case "ZX": case "ZXS": machineIdx = 0; break;
+                case "CPC": machineIdx = 1; break;
+                case "MSX": machineIdx = 2; break;
+                case "81": case "81-": machineIdx = 3; break;
+            }
+            maquinaCmbBx.SelectedIndex = machineIdx;
+            MaquinaCmbBx_SelectedIndexChanged(null, null);
+
+            modelCmbBx.SelectedIndex = Math.Max(0, _currentHeader.Model - 1);
+            nameEdt.Text = _currentHeader.Name;
+            aditionalInfoEdt.Text = _currentHeader.ExtraInfo;
+            bloksEdt.Text = _currentBlocks.Count.ToString();
+            originEdt.Text = _currentHeader.Origin.ToString();
+
+            enableIntChkBx.Checked = (_currentHeader.EiDi & 1) != 0;
+            reubicaEdt.Text = FormatValue(_currentHeader.Locate);
+            pokeEdt.Text = FormatValue(_currentHeader.PokeFfff);
+            clearEdt.Text = FormatValue(_currentHeader.ClearSp);
+            usrEdt.Text = FormatValue(_currentHeader.UsrPc);
+        }
+
+        private void UpdateHeader()
+        {
+            _currentHeader.Machine = maquinaCmbBx.Text;
+            _currentHeader.Model = (sbyte)(modelCmbBx.SelectedIndex + 1);
+            _currentHeader.ExtraInfo = aditionalInfoEdt.Text;
+            _currentHeader.EiDi = (byte)(enableIntChkBx.Checked ? 1 : 0);
+            _currentHeader.Name = nameEdt.Text;
+            _currentHeader.Locate = (byte)ParseValue(reubicaEdt.Text);
+            _currentHeader.ClearSp = (ushort)ParseValue(clearEdt.Text);
+            _currentHeader.UsrPc = (ushort)ParseValue(usrEdt.Text);
+            _currentHeader.PokeFfff = (byte)ParseValue(pokeEdt.Text);
+            _currentHeader.NBlocks = (byte)_currentBlocks.Count;
+        }
+
+        private int ParseValue(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return 0;
+            if (val.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                int.TryParse(val.Substring(2), NumberStyles.HexNumber, null, out int hex);
+                return hex;
+            }
+            int.TryParse(val, out int dec);
+            return dec;
+        }
+
+        private string FormatValue(int val)
+        {
+            return val.ToString(); // TODO: check if hex output is desired as in n2s
+        }
+
+        private void OpenSbb()
+        {
+            using (var ofd = new OpenFileDialog())
+            {
+                ofd.Filter = "SBB files (*.sbb)|*.sbb|All files (*.*)|*.*";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        var result = SbbPersistence.LoadSbb(ofd.FileName);
+                        _currentHeader = result.header;
+                        _currentBlocks = result.blocks;
+                        fileEdt.Text = ofd.FileName;
+                        FillData();
+                        maquinaCmbBx.Enabled = false;
+                        statusLabel.Text = $"Loaded {ofd.FileName}";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error loading SBB: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void SaveSbb(bool saveAs)
+        {
+            string path = fileEdt.Text;
+            if (saveAs || string.IsNullOrEmpty(path) || path == "new.SBB")
+            {
+                using (var sfd = new SaveFileDialog())
+                {
+                    sfd.Filter = "SBB files (*.sbb)|*.sbb";
+                    if (sfd.ShowDialog() != DialogResult.OK) return;
+                    path = sfd.FileName;
+                }
+            }
+
+            try
+            {
+                UpdateHeader();
+                SbbPersistence.SaveSbb(path, _currentHeader, _currentBlocks);
+                fileEdt.Text = path;
+                statusLabel.Text = $"Saved to {path}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving SBB: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void AddBtn_Click(object sender, EventArgs e)
