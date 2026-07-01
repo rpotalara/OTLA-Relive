@@ -63,13 +63,15 @@ namespace Otla.Net.UI
 
         private void SetupInitialState()
         {
-            this.maquinaCmbBx.SelectedIndex = 0; // Default ZX
+            this.frecuenciaCmbBx.Items.Clear();
             this.frecuenciaCmbBx.Items.AddRange(new object[] { "44100 Hz", "48000 Hz" });
             this.frecuenciaCmbBx.SelectedIndex = 0;
+
+            this.formaCmbBx.Items.Clear();
             this.formaCmbBx.Items.AddRange(new object[] { "Square", "Cubic", "SqrSin", "Shaw", "E=cte", "Delta" });
-            this.formaCmbBx.SelectedIndex = 0;
-            this.muestrasCmbBx.Items.AddRange(new object[] { "0", "1", "2", "3", "4", "5", "6" });
-            this.muestrasCmbBx.SelectedIndex = 1;
+            this.formaCmbBx.SelectedIndex = 1; // Default to Cubic as in screenshot
+
+            this.maquinaCmbBx.SelectedIndex = 0; // Default ZX
 
             this.statusLabel.Text = "Ready";
 
@@ -82,6 +84,166 @@ namespace Otla.Net.UI
 
             this.maquinaCmbBx.DrawItem += MaquinaCmbBx_DrawItem;
             this.formaCmbBx.DrawItem += FormaCmbBx_DrawItem;
+
+            this.maquinaCmbBx.SelectedIndexChanged += MaquinaCmbBx_SelectedIndexChanged;
+            this.frecuenciaCmbBx.SelectedIndexChanged += (s, e) => UpdateMuestras();
+
+            ClearData();
+
+            // Trigger initial state
+            MaquinaCmbBx_SelectedIndexChanged(null, null);
+        }
+
+        private void UpdateMuestras()
+        {
+            int selectedIndex = muestrasCmbBx.SelectedIndex;
+            muestrasCmbBx.Items.Clear();
+
+            int machineIdx = maquinaCmbBx.SelectedIndex;
+            bool is48k = frecuenciaCmbBx.SelectedIndex == 1;
+
+            if (machineIdx == 3) // 81
+            {
+                if (is48k)
+                {
+                    muestrasCmbBx.Items.Add("6 ( 8000 bps)");
+                    muestrasCmbBx.Items.Add("5 ( 9600 bps)");
+                    muestrasCmbBx.Items.Add("4 (12000 bps)");
+                    muestrasCmbBx.Items.Add("3 (16200 bps)");
+                }
+                else
+                {
+                    muestrasCmbBx.Items.Add("6 ( 7350 bps)");
+                    muestrasCmbBx.Items.Add("5 ( 8820 bps)");
+                    muestrasCmbBx.Items.Add("4 (11025 bps)");
+                    muestrasCmbBx.Items.Add("3 (14700 bps)");
+                }
+            }
+            else
+            {
+                if (is48k)
+                {
+                    muestrasCmbBx.Items.Add("4   (12000 bps)");
+                    muestrasCmbBx.Items.Add("3.5 (13600 bps)");
+                    muestrasCmbBx.Items.Add("3   (16200 bps)");
+                    muestrasCmbBx.Items.Add("2.5 (19200 bps)");
+                    if (machineIdx != 0) // Not ZX
+                    {
+                        muestrasCmbBx.Items.Add("2.75 (17454 bps)");
+                        muestrasCmbBx.Items.Add("2.25 (21333 bps)");
+                        muestrasCmbBx.Items.Add("1.75 (27428 bps)");
+                    }
+                }
+                else
+                {
+                    muestrasCmbBx.Items.Add("4   (11025 bps)");
+                    muestrasCmbBx.Items.Add("3.5 (12600 bps)");
+                    muestrasCmbBx.Items.Add("3   (14700 bps)");
+                    muestrasCmbBx.Items.Add("2.5 (17640 bps)");
+                    if (machineIdx != 0) // Not ZX
+                    {
+                        muestrasCmbBx.Items.Add("2.75 (16036 bps)");
+                        muestrasCmbBx.Items.Add("2.25 (19600 bps)");
+                        muestrasCmbBx.Items.Add("1.75 (25200 bps)");
+                    }
+                }
+            }
+
+            if (selectedIndex >= 0 && selectedIndex < muestrasCmbBx.Items.Count)
+                muestrasCmbBx.SelectedIndex = selectedIndex;
+            else if (muestrasCmbBx.Items.Count > 1)
+                muestrasCmbBx.SelectedIndex = 1; // Default to 3.5 or equivalent
+            else if (muestrasCmbBx.Items.Count > 0)
+                muestrasCmbBx.SelectedIndex = 0;
+        }
+
+        private void MaquinaCmbBx_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int idx = maquinaCmbBx.SelectedIndex;
+            if (idx < 0) return;
+
+            // Update Model ComboBox
+            modelCmbBx.Items.Clear();
+            switch (idx)
+            {
+                case 0: // ZX
+                    modelCmbBx.Items.AddRange(new object[] { "48k", "128k", "+2a" });
+                    break;
+                case 1: // CPC
+                    modelCmbBx.Items.AddRange(new object[] { "464", "6128", "664" });
+                    break;
+                case 2: // MSX
+                    modelCmbBx.Items.AddRange(new object[] { "16k", "32k", "64k" });
+                    break;
+                case 3: // 81
+                    modelCmbBx.Items.AddRange(new object[] { "1k", "2k", "16k", "48k", "64k" });
+                    break;
+            }
+            if (modelCmbBx.Items.Count > 0) modelCmbBx.SelectedIndex = 0;
+
+            // Reset defaults
+            locateLbl.Enabled = false;
+            reubicaEdt.Enabled = false;
+            pokeLbl.Enabled = false;
+            pokeEdt.Enabled = false;
+            clearLbl.Enabled = true;
+            clearEdt.Enabled = true;
+            usrLbl.Enabled = true;
+            usrEdt.Enabled = true;
+
+            checkLoadErrorChkBx.Enabled = true;
+            enableIntChkBx.Enabled = true;
+
+            switch (idx)
+            {
+                case 0: // ZX
+                    nameEdt.MaxLength = 10;
+                    clearLbl.Text = "CLEAR";
+                    usrLbl.Text = "USR";
+                    releMotorChkBx.Enabled = false;
+                    tzxBtn.Text = "SBB => TZX";
+                    reubicaEdt.Text = "255";
+                    break;
+                case 1: // CPC
+                    nameEdt.MaxLength = 16;
+                    clearLbl.Text = "SP";
+                    usrLbl.Text = "JP";
+                    locateLbl.Enabled = true;
+                    reubicaEdt.Enabled = true;
+                    releMotorChkBx.Enabled = true;
+                    tzxBtn.Text = "SBB => CDT";
+                    reubicaEdt.Text = "255";
+                    break;
+                case 2: // MSX
+                    nameEdt.MaxLength = 6;
+                    clearLbl.Text = "CLEAR";
+                    usrLbl.Text = "JP";
+                    locateLbl.Enabled = true;
+                    reubicaEdt.Enabled = true;
+                    pokeLbl.Enabled = true;
+                    pokeEdt.Enabled = true;
+                    releMotorChkBx.Enabled = true;
+                    tzxBtn.Text = "SBB => ¿TZX?";
+                    reubicaEdt.Text = "244"; // 0xf4
+                    pokeEdt.Text = "0";
+                    break;
+                case 3: // 81
+                    nameEdt.MaxLength = 2;
+                    clearLbl.Text = "SP";
+                    usrLbl.Text = "USR";
+                    clearLbl.Enabled = false;
+                    clearEdt.Enabled = false;
+                    usrLbl.Enabled = false;
+                    usrEdt.Enabled = false;
+                    checkLoadErrorChkBx.Enabled = false;
+                    enableIntChkBx.Enabled = false;
+                    releMotorChkBx.Enabled = false;
+                    tzxBtn.Text = "SBB => TZX";
+                    reubicaEdt.Text = "0";
+                    break;
+            }
+
+            UpdateMuestras();
         }
 
         private void MaquinaCmbBx_DrawItem(object sender, DrawItemEventArgs e)
@@ -122,10 +284,13 @@ namespace Otla.Net.UI
         {
             _currentBlocks.Clear();
             _currentHeader = new SbbHeader();
-            fileEdt.Text = "";
+            fileEdt.Text = "new.SBB";
             nameEdt.Text = "";
+            clearEdt.Text = "0";
+            usrEdt.Text = "0";
+            pokeEdt.Text = "0";
             blocksLV.Items.Clear();
-            statusLabel.Text = "Data cleared";
+            statusLabel.Text = "Ready";
         }
 
         private void AddBtn_Click(object sender, EventArgs e)
